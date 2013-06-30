@@ -3,22 +3,9 @@
 // Copyright (C) 2004 Rama Krishna. All rights reserved.
 // ---------------------------------------------------------
 
-# region Includes...
-
 using System;
 using System.Data;
-using System.Web;
-using System.Web.SessionState;
-using System.IO;
-using System.Text;
-using System.Xml;
-using System.Xml.Xsl;
-using System.Threading;
-
-# endregion // Includes...
-
-
-
+using RKLib.DatasetExporter.XslExporters;
 
 
 namespace RKLib.DatasetExporter
@@ -86,39 +73,40 @@ namespace RKLib.DatasetExporter
 	{
 
 
-        internal  enum ExportFormat : int 
+        internal  enum ExportFormat
         { 
-            CSV = 1,
+            Csv = 1,
             Excel = 2 
         }; // Export format enumeration
 
 
-        System.Web.HttpResponse response;
-		private string appType;	
+	    private readonly string _appType;	
 			
 		public DatasetExporter()
 		{
-			appType = "Web";
-			response = System.Web.HttpContext.Current.Response;
+			_appType = "Web";
 		}
 
 
 
 
-		public DatasetExporter(string ApplicationType)
+		public DatasetExporter(string applicationType)
 		{
 
-			appType = ApplicationType;
-			if(appType != "Web" && appType != "Win")
+			_appType = applicationType;
+			if(_appType != "Web" && _appType != "Win")
                 throw new Exception
                     ("Provide valid application format (Web/Win)");
 			
-            if (appType == "Web")
-                response = System.Web.HttpContext.Current.Response;
+            if (_appType == "Web")
+            {
+            }
+
+
+		}
 		
-        
-        }
-		
+
+
 		#region ExportDetails OverLoad : Type#1
 		
 		// Function  : ExportDetails 
@@ -127,7 +115,7 @@ namespace RKLib.DatasetExporter
 		//			   exorts in CSV / Excel format with all columns
 
 		internal void ExportDetails
-            (DataTable DetailsTable, 
+            (DataTable detailsTable, 
             ExportFormat FormatType, 
             string FileName)
 		{
@@ -137,7 +125,7 @@ namespace RKLib.DatasetExporter
 			
 
 
-				if(DetailsTable.Rows.Count == 0) 
+				if(detailsTable.Rows.Count == 0) 
 					throw new Exception
                         ("There are no details to export.");				
 				
@@ -145,7 +133,7 @@ namespace RKLib.DatasetExporter
 				// Create Dataset
 				
                 DataSet dsExport = new DataSet("Export");
-				DataTable dtExport = DetailsTable.Copy();
+				DataTable dtExport = detailsTable.Copy();
 				
                 dtExport.TableName = "Values"; 
 				
@@ -162,19 +150,19 @@ namespace RKLib.DatasetExporter
 					sFileds[i] = ReplaceSpecialCharacters(dtExport.Columns[i].ColumnName);					
 				}
 
-                if (appType == "Web")
+                if (_appType == "Web")
                 {
 
-                    XsltExporter.Export_with_XSLT_Web
+                    WebXsltExporter.ExportWithXsltWeb
                         (dsExport, sHeaders, sFileds,
                         FormatType, FileName);
 
                 }
 
-                if (appType == "Win")
+                if (_appType == "Win")
                 {
 
-                    LocalXsltExporter.Export_with_XSLT_Windows
+                    LocalXsltExporter.ExportWithXsltWindows
                         (dsExport, sHeaders, sFileds,
                         FormatType, FileName);
                 
@@ -198,8 +186,8 @@ namespace RKLib.DatasetExporter
 
 
 		internal void ExportDetails
-            (DataTable DetailsTable,
-            int[] ColumnList, ExportFormat FormatType,
+            (DataTable detailsTable,
+            int[] columnList, ExportFormat FormatType,
             string FileName)
 		{
 
@@ -208,58 +196,55 @@ namespace RKLib.DatasetExporter
 			{
 
 
-				if(DetailsTable.Rows.Count == 0)
+				if(detailsTable.Rows.Count == 0)
 					throw new Exception
                         ("There are no details to export");
 				
 				// Create Dataset
 				DataSet dsExport = new DataSet("Export");
 				
-                DataTable dtExport = DetailsTable.Copy();
+                DataTable dtExport = detailsTable.Copy();
 				
                 dtExport.TableName = "Values"; 
 				
                 dsExport.Tables.Add(dtExport);
 
-				if(ColumnList.Length > dtExport.Columns.Count)
+				if(columnList.Length > dtExport.Columns.Count)
 					throw new Exception
                         ("ExportColumn List should not exceed Total Columns");
 				
 
 				// Getting Field Names
-				string[] sHeaders = new string[ColumnList.Length];
-				string[] sFileds = new string[ColumnList.Length];
+				var sHeaders = new string[columnList.Length];
+				var sFileds = new string[columnList.Length];
 				
 
-				for (int i=0; i < ColumnList.Length; i++)
+				for (int i=0; i < columnList.Length; i++)
 				{
 
-					if((ColumnList[i] < 0) 
-                        || (ColumnList[i] >= dtExport.Columns.Count))
+					if((columnList[i] < 0) 
+                        || (columnList[i] >= dtExport.Columns.Count))
 						throw new Exception
                             ("ExportColumn Number should not exceed Total Columns Range");
 					
-					sHeaders[i] = dtExport.Columns[ColumnList[i]].ColumnName;
-					sFileds[i] = ReplaceSpecialCharacters(dtExport.Columns[ColumnList[i]].ColumnName);					
+					sHeaders[i] = dtExport.Columns[columnList[i]].ColumnName;
+					sFileds[i] = ReplaceSpecialCharacters(dtExport.Columns[columnList[i]].ColumnName);					
 				
                 }
 
 
-                if (appType == "Web")
+                switch (_appType)
                 {
-
-                    XsltExporter.Export_with_XSLT_Web
-                        (dsExport, sHeaders, sFileds,
-                        FormatType, FileName);
-
-                }
-                else if (appType == "Win")
-                {
-
-                    LocalXsltExporter.Export_with_XSLT_Windows
-                        (dsExport, sHeaders, sFileds,
-                        FormatType, FileName);
-
+                    case "Web":
+                        WebXsltExporter.ExportWithXsltWeb
+                            (dsExport, sHeaders, sFileds,
+                             FormatType, FileName);
+                        break;
+                    case "Win":
+                        LocalXsltExporter.ExportWithXsltWindows
+                            (dsExport, sHeaders, sFileds,
+                             FormatType, FileName);
+                        break;
                 }
 
 
@@ -272,6 +257,11 @@ namespace RKLib.DatasetExporter
 		
 		#endregion // ExportDetails OverLoad : Type#2
 
+
+
+
+
+
 		#region ExportDetails OverLoad : Type#3
 
 		// Function  : ExportDetails 
@@ -281,58 +271,54 @@ namespace RKLib.DatasetExporter
 		//			   with specified headers
 
         internal void ExportDetails
-            (DataTable DetailsTable, int[] ColumnList,
-            string[] Headers, ExportFormat FormatType,
+            (DataTable detailsTable, int[] columnList,
+            string[] headers, ExportFormat FormatType,
             string FileName)
         {
+            if (detailsTable.Rows.Count == 0)
+                throw new Exception("There are no details to export");
+
+            // Create Dataset
+            var dsExport = new DataSet("Export");
+            
+            DataTable dtExport = detailsTable.Copy();
+                
+            dtExport.TableName = "Values";
+                
+            dsExport.Tables.Add(dtExport);
 
 
-            try
+            if (columnList.Length != headers.Length)
+                throw new Exception
+                    ("ExportColumn List and Headers List should be of same length");
+
+            if (columnList.Length > dtExport.Columns.Count || headers.Length > dtExport.Columns.Count)
+                throw new Exception
+                    ("ExportColumn List should not exceed Total Columns");
+
+
+            // Getting Field Names
+            string[] sFileds = new string[columnList.Length];
+
+
+
+            for (int i = 0; i < columnList.Length; i++)
             {
-                if (DetailsTable.Rows.Count == 0)
-                    throw new Exception("There are no details to export");
 
-                // Create Dataset
-                DataSet dsExport = new DataSet("Export");
-                DataTable dtExport = DetailsTable.Copy();
-                dtExport.TableName = "Values";
-                dsExport.Tables.Add(dtExport);
-
-                if (ColumnList.Length != Headers.Length)
+                if ((columnList[i] < 0) || (columnList[i] >= dtExport.Columns.Count))
                     throw new Exception
-                        ("ExportColumn List and Headers List should be of same length");
+                        ("ExportColumn Number should not exceed Total Columns Range");
 
-                else if (ColumnList.Length > dtExport.Columns.Count || Headers.Length > dtExport.Columns.Count)
-                    throw new Exception
-                        ("ExportColumn List should not exceed Total Columns");
-
-                // Getting Field Names
-                string[] sFileds = new string[ColumnList.Length];
-
-                for (int i = 0; i < ColumnList.Length; i++)
-                {
-
-                    if ((ColumnList[i] < 0) || (ColumnList[i] >= dtExport.Columns.Count))
-                        throw new Exception
-                            ("ExportColumn Number should not exceed Total Columns Range");
-
-                    sFileds[i] = ReplaceSpecialCharacters
-                        (dtExport.Columns[ColumnList[i]].ColumnName);
-
-
-                }
-
-                PerformXsltExport(Headers, FormatType, FileName, dsExport, sFileds);
+                sFileds[i] = ReplaceSpecialCharacters
+                    (dtExport.Columns[columnList[i]].ColumnName);
 
 
             }
-            catch (Exception Ex)
-            {
-                throw Ex;
-            }
 
 
-
+            PerformXsltExport
+                (headers, FormatType,
+                 FileName, dsExport, sFileds);
         }
 
 
@@ -340,17 +326,17 @@ namespace RKLib.DatasetExporter
 
 
         private void PerformXsltExport
-            (string[] Headers, ExportFormat FormatType,
-            string FileName, DataSet dsExport, string[] sFileds)
+            (string[] headers, ExportFormat formatType,
+            string fileName, DataSet dsExport, string[] sFileds)
         {
 
-            if (appType == "Web")
-                XsltExporter.Export_with_XSLT_Web
-                    (dsExport, Headers, sFileds, FormatType, FileName);
+            if (_appType == "Web")
+                WebXsltExporter.ExportWithXsltWeb
+                    (dsExport, headers, sFileds, formatType, fileName);
 
-            if (appType == "Win")
-                LocalXsltExporter.Export_with_XSLT_Windows
-                    (dsExport, Headers, sFileds, FormatType, FileName);
+            if (_appType == "Win")
+                LocalXsltExporter.ExportWithXsltWindows
+                    (dsExport, headers, sFileds, formatType, fileName);
         }
 
 		#endregion // ExportDetails OverLoad : Type#3
@@ -360,17 +346,10 @@ namespace RKLib.DatasetExporter
 
 
 
-
-
-
-
-		#region ReplaceSpclChars 
-
-		// Function  : ReplaceSpclChars 
+	    // Function  : ReplaceSpclChars 
 		// Arguments : fieldName
 		// Purpose   : Replaces special characters with XML codes 
-
-		private string ReplaceSpecialCharacters(string fieldName)
+		private static string ReplaceSpecialCharacters(string fieldName)
 		{
 			//			space 	-> 	_x0020_
 			//			%		-> 	_x0025_
@@ -385,9 +364,6 @@ namespace RKLib.DatasetExporter
 			fieldName = fieldName.Replace("/", "_x002F_");
 			return fieldName;
 		}
-
-		#endregion // ReplaceSpclChars
-
 
 
 

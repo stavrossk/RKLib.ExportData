@@ -103,9 +103,9 @@
     <Compile Include="DatasetExporter.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LocalXsltExporter.cs" />
+    <Compile Include="XslExporters\LocalXsltExporter.cs" />
     <Compile Include="XslStylesheetConstructor.cs" />
-    <Compile Include="XsltExporter.cs" />
+    <Compile Include="XslExporters\WebXsltExporter.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

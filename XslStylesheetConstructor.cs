@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml;
 
 namespace RKLib.DatasetExporter
 {
+
+
     internal class XslStylesheetConstructor
     {
-
-
-
-
-
-
-
-
 
 
 
@@ -23,83 +15,120 @@ namespace RKLib.DatasetExporter
         // Purpose   : Creates XSLT file to apply on dataset's XML file 
         internal static void CreateStylesheet
             (XmlTextWriter writer, string[] sHeaders,
-            string[] sFileds, DatasetExporter.ExportFormat FormatType)
+            string[] sFileds, DatasetExporter.ExportFormat formatType)
         {
 
 
-            try
+            ConstructXslSkeleton(writer);
+
+            // xsl-template
+            writer.WriteStartElement("xsl:template");
+            writer.WriteAttributeString("match", "/");
+
+
+            XslValueOfForHeaders
+                (writer, sHeaders,
+                 sFileds, formatType);
+
+
+            XslForEach(writer);
+
+
+            XslValueOfForDataFields
+                (writer, sFileds, formatType);
+
+
+            FinalizeXslStylesheet(writer);
+
+        
+        }
+
+
+
+
+        private static void FinalizeXslStylesheet(XmlWriter writer)
+        {
+            
+            writer.WriteEndElement(); // xsl:for-each
+            
+            writer.WriteEndElement(); // xsl-template
+            
+            writer.WriteEndElement(); // xsl:stylesheet
+        
+            writer.WriteEndDocument();
+        
+        }
+
+
+        private static void XslForEach(XmlWriter writer)
+        {
+
+            // xsl:for-each
+            writer.WriteStartElement
+                ("xsl:for-each");
+            
+            writer.WriteAttributeString
+                ("select", "Export/Values");
+            
+            writer.WriteString
+                ("\r\n");
+        
+        }
+
+
+
+        private static void XslValueOfForDataFields
+            (XmlWriter writer, IList<string> sFileds,
+            DatasetExporter.ExportFormat formatType)
+        {
+
+            // xsl:value-of for data fields
+            for (int i = 0; i < sFileds.Count; i++)
             {
+                writer.WriteString("\"");
+                writer.WriteStartElement("xsl:value-of");
+                writer.WriteAttributeString("select", sFileds[i]);
+                writer.WriteEndElement(); // xsl:value-of
+                writer.WriteString("\"");
 
-                ConstructXslSkeleton(writer);
-
-                // xsl-template
-                writer.WriteStartElement("xsl:template");
-                writer.WriteAttributeString("match", "/");
-
-
-                // xsl:value-of for headers
-                for (int i = 0; i < sHeaders.Length; i++)
+                if (i != sFileds.Count - 1)
                 {
-                    writer.WriteString("\"");
-                    writer.WriteStartElement("xsl:value-of");
-                    writer.WriteAttributeString("select", "'" + sHeaders[i] + "'");
-                    writer.WriteEndElement(); // xsl:value-of
-                    writer.WriteString("\"");
-
-
-                    if (i != sFileds.Length - 1)
-                        writer.WriteString
-                            ((FormatType == DatasetExporter.ExportFormat.CSV)
-                            ? "," : "	");
-
-
+                    writer.WriteString
+                        ((formatType == DatasetExporter.ExportFormat.Csv)
+                             ? ","
+                             : "	");
                 }
 
 
-
-                // xsl:for-each
-                writer.WriteStartElement("xsl:for-each");
-                writer.WriteAttributeString("select", "Export/Values");
-                writer.WriteString("\r\n");
-
-
-
-                // xsl:value-of for data fields
-                for (int i = 0; i < sFileds.Length; i++)
-                {
-
-
-                    writer.WriteString("\"");
-                    writer.WriteStartElement("xsl:value-of");
-                    writer.WriteAttributeString("select", sFileds[i]);
-                    writer.WriteEndElement(); // xsl:value-of
-                    writer.WriteString("\"");
-
-                    if (i != sFileds.Length - 1)
-                    {
-
-                        writer.WriteString
-                            ((FormatType == DatasetExporter.ExportFormat.CSV)
-                            ? "," : "	");
-
-                    }
-
-                }
-
-
-                writer.WriteEndElement(); // xsl:for-each
-                writer.WriteEndElement(); // xsl-template
-                writer.WriteEndElement(); // xsl:stylesheet
-                writer.WriteEndDocument();
-
-
             }
-            catch (Exception Ex)
+
+
+        }
+
+
+
+
+
+        private static void XslValueOfForHeaders
+            (XmlWriter writer, IList<string> sHeaders,
+            ICollection<string> sFileds, DatasetExporter.ExportFormat formatType)
+        {
+// xsl:value-of for headers
+            for (int i = 0; i < sHeaders.Count; i++)
             {
-                throw Ex;
+                writer.WriteString("\"");
+                writer.WriteStartElement("xsl:value-of");
+                writer.WriteAttributeString("select", "'" + sHeaders[i] + "'");
+                writer.WriteEndElement(); // xsl:value-of
+                writer.WriteString("\"");
+
+
+                if (i != sFileds.Count - 1)
+                    writer.WriteString
+                        ((formatType == DatasetExporter.ExportFormat.Csv)
+                             ? ","
+                             : "	");
             }
-
-
         }
 
         private static void ConstructXslSkeleton(XmlTextWriter writer)
@@ -125,13 +154,7 @@ namespace RKLib.DatasetExporter
 
 
 
-
-
-
-
-
-
-
-
     }
+
+
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Data;
 using System.Xml;
@@ -24,7 +23,7 @@ namespace RKLib.DatasetExporter
         // Function  : Export_with_XSLT_Windows 
         // Arguments : dsExport, sHeaders, sFileds, FormatType, FileName
         // Purpose   : Exports dataset into CSV / Excel format
-        internal static void Export_with_XSLT_Windows
+        internal static void ExportWithXsltWindows
             (DataSet datasetToExport, string[] sHeaders, string[] sFileds,
             DatasetExporter.ExportFormat FormatType, string FileName)
         {
@@ -41,7 +40,7 @@ namespace RKLib.DatasetExporter
                     out memoryStream, out writer);
 
 
-                System.IO.StringWriter sw
+                StringWriter sw
                     = PerformXsltTransform
                     (datasetToExport, memoryStream);
 
