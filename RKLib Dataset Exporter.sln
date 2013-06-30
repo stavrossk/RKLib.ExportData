@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RKLib.DatasetExporter", "RKLib.DatasetExporter.csproj", "{35817307-D14A-4B77-8212-B820C4325421}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RKLib Dataset Exporter", "RKLib Dataset Exporter.csproj", "{35817307-D14A-4B77-8212-B820C4325421}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
